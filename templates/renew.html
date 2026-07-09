@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>License Renewal - FaceAuth System</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/t_logo.png') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #0f2027; color: white; display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body>
+    <div class="w-full max-w-lg p-6">
+        <div class="bg-black/40 backdrop-blur-xl border border-white/10 p-8 rounded-2xl shadow-2xl">
+            
+            <div class="flex justify-center mb-6">
+                <div class="w-16 h-16 bg-amber-500/10 rounded-2xl flex items-center justify-center border border-amber-500/30">
+                    <i class="fas fa-key text-3xl text-amber-500"></i>
+                </div>
+            </div>
+
+            <h2 class="text-2xl font-bold text-center mb-2">License Renewal Required</h2>
+            <p class="text-gray-400 text-center mb-8 text-sm">
+                {% if current_license %}
+                Your license expired on <strong>{{ current_license.expires_at.strftime('%d %b %Y') }}</strong>. 
+                {% else %}
+                No valid license found on this machine.
+                {% endif %}
+                Enter a new product key to continue. Keys are valid for 12 months.
+            </p>
+
+            <form id="renewForm">
+                <div class="mb-6">
+                    <input type="text" id="productKey" class="w-full bg-black/50 border border-white/20 rounded-xl p-4 text-center text-xl tracking-[0.2em] font-mono text-amber-400 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none uppercase placeholder:text-gray-600" placeholder="XXXX-XXXX-XXXX-XXXX" required>
+                </div>
+
+                <button type="submit" id="submitBtn" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-4 px-4 rounded-xl transition-all shadow-lg flex justify-center items-center">
+                    <i class="fas fa-unlock mr-2"></i> Activate Key
+                </button>
+            </form>
+            
+            <div id="messageBox" class="mt-4 p-4 rounded-lg hidden font-medium text-center text-sm"></div>
+
+            <p class="text-xs text-gray-500 mt-8 text-center bg-white/5 p-4 rounded-lg border border-white/10">
+                <i class="fas fa-info-circle mr-1"></i> Contact your vendor for a renewal key. The system stores the expiry in an encrypted local database. No internet required for validation.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('productKey').addEventListener('input', function (e) {
+            let target = e.target;
+            let val = target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+            if (val.length > 4) val = val.substring(0, 4) + '-' + val.substring(4);
+            if (val.length > 9) val = val.substring(0, 9) + '-' + val.substring(9);
+            if (val.length > 14) val = val.substring(0, 14) + '-' + val.substring(14);
+            target.value = val.substring(0, 19);
+        });
+
+        document.getElementById('renewForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const key = document.getElementById('productKey').value;
+            const msgBox = document.getElementById('messageBox');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Verifying...';
+            msgBox.classList.add('hidden');
+            
+            try {
+                const res = await fetch('/api/renew', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ product_key: key })
+                });
+                const data = await res.json();
+                
+                msgBox.classList.remove('hidden');
+                if (res.ok) {
+                    msgBox.className = 'mt-4 p-4 rounded-lg font-medium text-center text-sm bg-green-500/20 text-green-400 border border-green-500/30';
+                    msgBox.textContent = 'Activation successful! Redirecting...';
+                    setTimeout(() => window.location.href = '/', 1500);
+                } else {
+                    msgBox.className = 'mt-4 p-4 rounded-lg font-medium text-center text-sm bg-red-500/20 text-red-400 border border-red-500/30';
+                    msgBox.textContent = data.message || 'Invalid key.';
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-unlock mr-2"></i> Activate Key';
+                }
+            } catch (err) {
+                msgBox.className = 'mt-4 p-4 rounded-lg font-medium text-center text-sm bg-red-500/20 text-red-400 border border-red-500/30';
+                msgBox.textContent = 'Network error.';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-unlock mr-2"></i> Activate Key';
+            }
+        });
+    </script>
+</body>
+</html>

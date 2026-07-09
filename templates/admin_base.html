@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block layout %}
+<div class="flex flex-1 flex-grow w-full min-h-screen overflow-hidden">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-[#1e1e1e]/80 backdrop-blur-xl border-r border-white/10 flex flex-col flex-shrink-0">
+        <!-- Logo -->
+        <div class="h-20 flex items-center px-6 border-b border-white/5">
+            <a href="/" class="text-white text-xl font-bold flex items-center hover:text-cyan-400 transition-colors">
+                <i class="far fa-square text-cyan-400 mr-3 text-2xl"></i> FaceAuth
+            </a>
+        </div>
+        
+        <!-- Admin Console label -->
+        <div class="px-6 py-4">
+            <span class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Admin console</span>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar">
+            <div class="text-xs text-gray-500 font-semibold mb-2 mt-4 ml-2 uppercase tracking-wider">Main</div>
+            <a href="{{ url_for('admin_dashboard') }}" class="flex items-center px-3 py-2.5 text-sm font-medium text-gray-300 rounded-lg hover:bg-white/5 hover:text-white group transition-colors">
+                <i class="fas fa-border-all w-6 text-gray-400 group-hover:text-cyan-400 transition-colors"></i> Dashboard
+            </a>
+            <a href="{{ url_for('admin_users_page') }}" class="flex items-center px-3 py-2.5 text-sm font-medium text-gray-300 rounded-lg hover:bg-white/5 hover:text-white group transition-colors">
+                <i class="far fa-user w-6 text-gray-400 group-hover:text-cyan-400 transition-colors"></i> Users
+            </a>
+            <a href="{{ url_for('logs_page') }}" class="flex items-center px-3 py-2.5 text-sm font-medium text-gray-300 rounded-lg hover:bg-white/5 hover:text-white group transition-colors">
+                <i class="far fa-list-alt w-6 text-gray-400 group-hover:text-cyan-400 transition-colors"></i> Logs
+            </a>
+
+            <div class="text-xs text-gray-500 font-semibold mb-2 mt-8 ml-2 uppercase tracking-wider">System</div>
+            <a href="{{ url_for('admin_licence_page') }}" class="flex items-center px-3 py-2.5 text-sm font-medium text-gray-300 rounded-lg hover:bg-white/5 hover:text-white group transition-colors">
+                <i class="far fa-id-badge w-6 text-gray-400 group-hover:text-yellow-400 transition-colors"></i> Licenses
+            </a>
+            <a href="{{ url_for('register_page') }}" class="flex items-center px-3 py-2.5 text-sm font-medium text-gray-300 rounded-lg hover:bg-white/5 hover:text-white group transition-colors">
+                <i class="fas fa-user-plus w-6 text-gray-400 group-hover:text-cyan-400 transition-colors"></i> Register
+            </a>
+            <a href="{{ url_for('master_page') }}" class="flex items-center px-3 py-2.5 text-sm font-medium text-gray-300 rounded-lg hover:bg-white/5 hover:text-white group transition-colors">
+                <i class="fas fa-layer-group w-6 text-gray-400 group-hover:text-cyan-400 transition-colors"></i> Master
+            </a>
+        </nav>
+
+        <!-- Log out -->
+        <div class="p-4 border-t border-white/5">
+            <a href="{{ url_for('admin_logout') }}" class="flex items-center px-3 py-2.5 text-sm font-medium text-gray-400 rounded-lg hover:bg-red-500/10 hover:text-red-400 group transition-colors">
+                <i class="fas fa-sign-out-alt w-6"></i> Log out
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 relative overflow-y-auto bg-[#121212]/90 backdrop-blur-sm custom-scrollbar focus:outline-none">
+        <div class="py-10 px-10 max-w-7xl mx-auto">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+</div>
+{% endblock %}

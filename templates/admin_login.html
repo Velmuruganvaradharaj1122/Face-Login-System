@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block layout %}
+<div class="flex-1 flex items-center justify-center min-h-screen">
+  <div class="w-full max-w-md px-4 py-8">
+
+    <div class="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+
+      <div class="bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-b border-white/10 px-8 py-6 text-center">
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-cyan-500/20 border border-cyan-500/40 mb-3">
+          <i class="fas fa-shield-alt text-2xl text-cyan-400"></i>
+        </div>
+        <h1 class="text-2xl font-bold text-white">Admin Portal</h1>
+        <p class="text-sm text-gray-400 mt-1">Restricted access — authorised personnel only</p>
+      </div>
+
+      <div class="px-8 py-7">
+        {% if error %}
+        <div class="mb-5 flex items-center gap-3 bg-red-500/20 border border-red-500/50 text-red-400 rounded-lg px-4 py-3 text-sm font-medium">
+          <i class="fas fa-exclamation-circle flex-shrink-0"></i><span>{{ error }}</span>
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('admin_login_page') }}" id="adminLoginForm">
+          <div class="mb-4">
+            <label for="employee_id" class="block text-sm font-medium text-gray-300 mb-1">
+              <i class="fas fa-id-badge mr-1 text-cyan-400"></i> Admin Email / ID
+            </label>
+            <input type="text" id="employee_id" name="employee_id" placeholder="e.g. adminit@email.com"
+              autocomplete="username" required
+              class="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 transition"/>
+          </div>
+
+          <div class="mb-6">
+            <label for="password" class="block text-sm font-medium text-gray-300 mb-1">
+              <i class="fas fa-lock mr-1 text-cyan-400"></i> Password
+            </label>
+            <div class="relative">
+              <input type="password" id="password" name="password" placeholder="Admin password"
+                autocomplete="current-password" required
+                class="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-2.5 pr-11 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 transition"/>
+              <button type="button" onclick="togglePw()" tabindex="-1"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition">
+                <i id="pwIcon" class="fas fa-eye text-sm"></i>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" id="submitBtn"
+            class="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-semibold py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 text-sm">
+            <i class="fas fa-sign-in-alt"></i>
+            <span id="submitLabel">Sign in as Admin</span>
+          </button>
+        </form>
+
+        <div class="mt-6 flex items-center gap-3">
+          <div class="flex-1 h-px bg-white/10"></div>
+          <span class="text-xs text-gray-500">Employee?</span>
+          <div class="flex-1 h-px bg-white/10"></div>
+        </div>
+        <div class="mt-4 text-center">
+          <a href="{{ url_for('user_login_page') }}" class="text-sm text-cyan-400 hover:text-cyan-300 transition">
+            <i class="fas fa-camera mr-1"></i> Go to Face Login
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function togglePw() {
+    const inp = document.getElementById('password');
+    const ico = document.getElementById('pwIcon');
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+    ico.classList.toggle('fa-eye'); ico.classList.toggle('fa-eye-slash');
+  }
+  document.getElementById('adminLoginForm').addEventListener('submit', () => {
+    const btn = document.getElementById('submitBtn');
+    document.getElementById('submitLabel').textContent = 'Signing in…';
+    btn.disabled = true;
+  });
+</script>
+{% endblock %}

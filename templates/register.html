@@ -1,0 +1,80 @@
+{% extends "admin_base.html" %}
+
+{% block content %}
+<div class="flex justify-center mt-10">
+    <div class="w-full max-w-4xl">
+        <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+            <div class="bg-black/30 p-4 border-b border-white/10 text-center">
+                <h3 class="text-2xl font-semibold text-white"><i class="fas fa-user-plus mr-2 text-cyan-400"></i>Employee Registration</h3>
+            </div>
+            <div class="p-6 md:p-8">
+                <form id="registrationForm">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <!-- User Details -->
+                            <h5 class="text-xl font-medium text-cyan-400 mb-4 border-b border-white/10 pb-2">Personal Details</h5>
+                            <div class="mb-4">
+                                <label for="employeeId" class="block text-sm font-medium text-gray-300 mb-1">Employee ID</label>
+                                <input type="text" class="w-full bg-black/20 border border-white/20 rounded-lg p-3 text-white focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none transition-all" id="employeeId" required>
+                            </div>
+                            <div class="mb-4">
+                                <label for="fullName" class="block text-sm font-medium text-gray-300 mb-1">Full Name</label>
+                                <input type="text" class="w-full bg-black/20 border border-white/20 rounded-lg p-3 text-white focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none transition-all" id="fullName" required>
+                            </div>
+                            <div class="mb-4">
+                                <label for="email" class="block text-sm font-medium text-gray-300 mb-1">Email Address</label>
+                                <input type="email" class="w-full bg-black/20 border border-white/20 rounded-lg p-3 text-white focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none transition-all" id="email" required>
+                            </div>
+                        </div>
+                        <div>
+                            <!-- Face Capture -->
+                            <h5 class="text-xl font-medium text-cyan-400 mb-4 border-b border-white/10 pb-2">Face Capture</h5>
+                            <div class="relative inline-block overflow-hidden rounded-xl shadow-lg border-2 border-white/10 bg-black mb-4 w-full text-center">
+                                <video id="webcam" autoplay playsinline width="320" height="240" class="object-cover w-full h-[240px]"></video>
+                                <img id="previewImage" width="320" height="240" class="object-cover w-full h-[240px] hidden" />
+                                <canvas id="canvas" class="hidden"></canvas>
+                            </div>
+                            <div class="flex flex-col space-y-3">
+                                <button type="button" id="startCamera" class="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold py-3 px-4 rounded-xl transition-all">
+                                    <i class="fas fa-camera mr-2"></i> Start Camera
+                                </button>
+                                <button type="button" id="captureFace" class="bg-gradient-to-r from-teal-400 to-emerald-500 hover:from-teal-500 hover:to-emerald-600 text-white font-bold py-3 px-4 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg" disabled>
+                                    <i class="fas fa-camera-retro mr-2"></i> Capture Face
+                                </button>
+                                <button type="button" id="retakeFace" class="hidden bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg">
+                                    <i class="fas fa-undo mr-2"></i> Retake Picture
+                                </button>
+                            </div>
+                            <div id="captureStatus" class="mt-4 text-center text-emerald-400 hidden font-medium">
+                                <i class="fas fa-check-circle mr-1"></i> Face captured successfully!
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr class="border-white/10 my-8">
+                    
+                    <div class="w-full">
+                        <button type="submit" id="submitBtn" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-4 px-6 rounded-xl transition-all text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            <i class="fas fa-user-check mr-2"></i> Register Employee
+                        </button>
+                    </div>
+                </form>
+                
+                <div id="messageBox" class="mt-4 p-4 rounded-lg hidden font-medium text-center"></div>
+            </div>
+            <div class="bg-black/20 p-4 border-t border-white/10 text-center">
+                <a href="{{ url_for('user_login_page') }}" class="text-cyan-400 hover:text-cyan-300 transition-colors">Already registered? Go to Login</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/webcam.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        initRegistrationFlow();
+    });
+</script>
+{% endblock %}

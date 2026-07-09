@@ -1,0 +1,29 @@
+{% extends "user_base.html" %}
+
+{% block content %}
+<div class="flex justify-center mt-10">
+    <div class="w-full max-w-2xl">
+        <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+            <div class="p-10 text-center">
+                
+                <div class="text-7xl text-emerald-400 mb-6 drop-shadow-[0_0_15px_rgba(52,211,153,0.5)]">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                
+                <h1 class="text-4xl font-bold text-white mb-2">Welcome, {{ user_name }}!</h1>
+                <p class="text-xl text-gray-400 font-medium">Employee ID: <span class="text-cyan-400">{{ employee_id }}</span></p>
+                
+                <hr class="border-white/10 my-8">
+                
+                <p class="text-lg text-gray-300">You have successfully authenticated using facial recognition.</p>
+                
+                <div class="mt-10">
+                    <a href="{{ url_for('user_logout') }}" class="inline-flex items-center justify-center bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-bold py-4 px-8 rounded-xl transition-all shadow-lg text-lg">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

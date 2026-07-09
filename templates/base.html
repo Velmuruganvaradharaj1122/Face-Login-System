@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Recognition System</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/t_logo.png') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        deeptech: { 900: '#0a151b', 800: '#142a35', 700: '#1d3e4e' }
+                    },
+                    fontFamily: { sans: ['Outfit', 'Inter', 'sans-serif'] },
+                    animation: {
+                        'gradient-x': 'gradient-x 15s ease infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        'gradient-x': {
+                            '0%, 100%': {
+                                'background-size': '200% 200%',
+                                'background-position': 'left center'
+                            },
+                            '50%': {
+                                'background-size': '200% 200%',
+                                'background-position': 'right center'
+                            },
+                        },
+                        'float': {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: linear-gradient(-45deg, #0a151b, #1d3e4e, #0c202a, #203a43);
+            background-size: 400% 400%;
+            animation: gradient-x 15s ease infinite;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            zoom: 0.8;
+        }
+        main { flex-grow: 1; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        ::-webkit-scrollbar-thumb { background: rgba(0, 229, 255, 0.2); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(0, 229, 255, 0.5); }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+    <script>
+        function showToast(message, type = 'success') {
+            const isError = type === 'error';
+            Toastify({
+                text: message,
+                duration: 3000,
+                gravity: "top", 
+                position: "right",
+                stopOnFocus: true, 
+                style: {
+                    background: isError ? "linear-gradient(to right, #ff4b2b, #ff416c)" : "linear-gradient(to right, #00b4db, #0083b0)",
+                    borderRadius: "8px",
+                    fontFamily: "Outfit, sans-serif",
+                    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+                    padding: "12px 24px"
+                }
+            }).showToast();
+        }
+    </script>
+</head>
+
+<body class="antialiased font-sans bg-[#121212] text-[#e0e0e0] flex flex-col min-h-screen m-0 p-0 overflow-x-hidden">
+
+    {% block layout %}
+        <main class="flex-grow container mx-auto px-4 py-8 max-w-7xl">
+            {% block content %}{% endblock %}
+        </main>
+    {% endblock %}
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

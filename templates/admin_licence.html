@@ -1,0 +1,394 @@
+{% extends "admin_base.html" %}
+{% block content %}
+<div class="w-full">
+
+  <!-- Page header -->
+  <div class="flex items-center justify-between mb-8">
+    <div>
+      <h1 class="text-2xl font-bold text-white flex items-center gap-3">
+        <i class="fas fa-key text-yellow-400"></i> Licence Manager
+      </h1>
+      <p class="text-gray-400 text-sm mt-1">Generate and activate product keys for annual subscription</p>
+    </div>
+    <a href="{{ url_for('admin_dashboard') }}"
+       class="text-sm text-gray-400 hover:text-white transition flex items-center gap-2">
+      <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+  </div>
+
+  <!-- ── Current licence status card ── -->
+  <div class="mb-6 rounded-2xl border overflow-hidden
+    {% if licence and not licence.is_expired() %}
+      bg-emerald-500/10 border-emerald-500/30
+    {% elif licence and licence.is_expired() %}
+      bg-red-500/10 border-red-500/30
+    {% else %}
+      bg-yellow-500/10 border-yellow-500/30
+    {% endif %}
+  ">
+    <div class="px-6 py-5 flex flex-col md:flex-row md:items-center gap-4">
+      <div class="flex items-center gap-4 flex-1">
+        <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0
+          {% if licence and not licence.is_expired() %}bg-emerald-500/20
+          {% elif licence and licence.is_expired() %}bg-red-500/20
+          {% else %}bg-yellow-500/20{% endif %}">
+          <i class="fas fa-{% if licence and not licence.is_expired() %}check-circle text-emerald-400{% elif licence and licence.is_expired() %}times-circle text-red-400{% else %}exclamation-triangle text-yellow-400{% endif %} text-xl"></i>
+        </div>
+        <div>
+          {% if licence and not licence.is_expired() %}
+            <div class="text-white font-semibold">Licence active</div>
+            <div class="text-sm text-gray-400 mt-0.5">
+              Key: <span class="font-mono text-emerald-400">{{ licence.product_key }}</span>
+              &nbsp;·&nbsp; Expires <strong class="text-white">{{ licence.expires_at.strftime('%d %b %Y') }}</strong>
+              &nbsp;·&nbsp; <span class="text-emerald-400">{{ licence.days_remaining() }} days remaining</span>
+            </div>
+          {% elif licence and licence.is_expired() %}
+            <div class="text-white font-semibold">Licence expired</div>
+            <div class="text-sm text-gray-400 mt-0.5">
+              Key: <span class="font-mono text-red-400">{{ licence.product_key }}</span>
+              &nbsp;·&nbsp; Expired <strong class="text-white">{{ licence.expires_at.strftime('%d %b %Y') }}</strong>
+            </div>
+          {% else %}
+            <div class="text-white font-semibold">No active licence</div>
+            <div class="text-sm text-gray-400 mt-0.5">Generate and activate a key below to enable the subscription.</div>
+          {% endif %}
+        </div>
+      </div>
+      {% if licence and not licence.is_expired() %}
+      <button onclick="revokeLicence()"
+        class="text-sm text-red-400 hover:text-red-300 border border-red-400/30 hover:border-red-400/60 px-4 py-2 rounded-lg transition flex items-center gap-2 flex-shrink-0">
+        <i class="fas fa-ban"></i> Revoke
+      </button>
+      {% endif %}
+    </div>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+
+    <!-- ── Generate key panel ── -->
+    <div class="bg-white/5 border border-white/10 rounded-2xl p-6">
+      <h2 class="text-lg font-semibold text-white mb-1 flex items-center gap-2">
+        <i class="fas fa-magic text-cyan-400"></i> Generate key
+      </h2>
+      <p class="text-sm text-gray-400 mb-5">Create a new product key using HMAC-SHA256. Only this system can generate valid keys.</p>
+
+      <div class="mb-4">
+        <label class="block text-sm text-gray-300 mb-1">Machine / client ID <span class="text-gray-500">(optional)</span></label>
+        <input type="text" id="genMachineId" placeholder="e.g. CLIENT-001 or leave blank"
+          class="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 transition"/>
+        <p class="text-xs text-gray-500 mt-1">Tie a key to a specific machine or leave blank for a global key.</p>
+      </div>
+
+      <button onclick="generateKey()"
+        class="w-full bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/50 text-cyan-400 font-medium py-2.5 rounded-lg transition text-sm flex items-center justify-center gap-2 mb-4">
+        <i class="fas fa-cogs"></i> <span id="genLabel">Generate product key</span>
+      </button>
+
+      <!-- Generated key result -->
+      <div id="genResult" class="hidden">
+        <div class="bg-black/30 border border-white/10 rounded-lg px-4 py-3">
+          <div class="text-xs text-gray-400 mb-1">Generated key — copy before activating</div>
+          <div class="flex items-center gap-2">
+            <span id="genKeyDisplay" class="font-mono text-lg font-bold text-cyan-300 tracking-widest flex-1"></span>
+            <button onclick="copyGenKey()" class="text-gray-400 hover:text-white transition" title="Copy key">
+              <i class="fas fa-copy"></i>
+            </button>
+          </div>
+        </div>
+        <button onclick="activateGenerated()"
+          class="w-full mt-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-semibold py-2.5 rounded-lg transition text-sm flex items-center justify-center gap-2">
+          <i class="fas fa-check-circle"></i> Activate this key now
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Activate existing key panel ── -->
+    <div class="bg-white/5 border border-white/10 rounded-2xl p-6">
+      <h2 class="text-lg font-semibold text-white mb-1 flex items-center gap-2">
+        <i class="fas fa-unlock-alt text-yellow-400"></i> Activate a key
+      </h2>
+      <p class="text-sm text-gray-400 mb-5">Paste an existing product key to activate or renew the licence.</p>
+
+      <div class="mb-4">
+        <label class="block text-sm text-gray-300 mb-1">Product key</label>
+        <input type="text" id="activateKey" placeholder="XXXX-XXXX-XXXX-XXXX"
+          maxlength="19" autocomplete="off"
+          class="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 text-sm font-mono tracking-widest uppercase focus:outline-none focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400/50 transition"/>
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-sm text-gray-300 mb-1">Machine ID <span class="text-gray-500">(optional)</span></label>
+        <input type="text" id="activateMachineId" placeholder="e.g. CLIENT-001"
+          class="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400/50 transition"/>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4 mb-4">
+        <div>
+          <label class="block text-sm text-gray-300 mb-1">Valid From</label>
+          <input type="date" id="activateValidFrom"
+            class="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400/50 transition [color-scheme:dark]"/>
+        </div>
+        <div>
+          <label class="block text-sm text-gray-300 mb-1">Expires At</label>
+          <input type="date" id="activateExpiresAt"
+            class="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400/50 transition [color-scheme:dark]"/>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4 mb-5">
+        <div>
+          <label class="block text-sm text-gray-300 mb-1">Assign to Users <span class="text-gray-500">(Optional)</span></label>
+          <select id="activateUsers" multiple
+            class="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400/50 transition h-24">
+            <!-- Populated via JS -->
+          </select>
+          <p class="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple.</p>
+        </div>
+        <div>
+          <label class="block text-sm text-gray-300 mb-1">Assign to Groups <span class="text-gray-500">(Optional)</span></label>
+          <select id="activateGroups" multiple
+            class="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400/50 transition h-24">
+            <!-- Populated via JS -->
+          </select>
+          <p class="text-xs text-gray-500 mt-1">Leave both empty for Global licence.</p>
+        </div>
+      </div>
+
+      <button onclick="activateKey()"
+        class="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-white font-semibold py-2.5 rounded-lg transition text-sm flex items-center justify-center gap-2">
+        <i class="fas fa-bolt"></i> <span id="activateLabel">Activate licence</span>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ── Message box ── -->
+  <div id="messageBox" class="hidden mb-6 rounded-xl px-5 py-4 text-sm font-medium text-center"></div>
+
+  <!-- ── Licence history ── -->
+  {% if history %}
+  <div class="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+    <div class="px-6 py-4 border-b border-white/10">
+      <h2 class="text-base font-semibold text-white flex items-center gap-2">
+        <i class="fas fa-history text-gray-400"></i> Licence history
+      </h2>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-white/10 text-gray-400 text-xs uppercase tracking-wide">
+            <th class="px-6 py-3 text-left">Key</th>
+            <th class="px-6 py-3 text-left">Activated</th>
+            <th class="px-6 py-3 text-left">Expires</th>
+            <th class="px-6 py-3 text-left">Users</th>
+            <th class="px-6 py-3 text-left">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for lic in history %}
+          <tr class="border-b border-white/5 hover:bg-white/5 transition">
+            <td class="px-6 py-3 font-mono text-cyan-300 text-xs">{{ lic.product_key }}</td>
+            <td class="px-6 py-3 text-gray-300">
+              {{ lic.activated_at.strftime('%d %b %Y') if lic.activated_at else '—' }}
+            </td>
+            <td class="px-6 py-3 text-gray-300">
+              {{ lic.expires_at.strftime('%d %b %Y') if lic.expires_at else '—' }}
+            </td>
+            <td class="px-6 py-3 text-gray-300 text-xs">
+              {% if lic.users|length > 0 %}
+                {{ lic.users|length }} user(s)
+              {% else %}
+                Global
+              {% endif %}
+            </td>
+            <td class="px-6 py-3">
+              {% if lic.is_active and not lic.is_expired() %}
+                <span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs px-2 py-0.5 rounded-full">Active</span>
+              {% elif lic.is_expired() %}
+                <span class="bg-red-500/20 text-red-400 border border-red-500/30 text-xs px-2 py-0.5 rounded-full">Expired</span>
+              {% else %}
+                <span class="bg-gray-500/20 text-gray-400 border border-gray-500/30 text-xs px-2 py-0.5 rounded-full">Revoked</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Auto-format XXXX-XXXX-XXXX-XXXX as user types
+  document.getElementById('activateKey').addEventListener('input', function () {
+    let v = this.value.replace(/[^A-Z0-9]/gi, '').toUpperCase().slice(0, 16);
+    this.value = (v.match(/.{1,4}/g) || []).join('-');
+  });
+
+  // Load users into dropdown on page load
+  document.addEventListener('DOMContentLoaded', async () => {
+    try {
+      const res = await fetch('/api/users/list');
+      const data = await res.json();
+      if (data.success && data.users) {
+        const select = document.getElementById('activateUsers');
+        data.users.forEach(u => {
+          const opt = document.createElement('option');
+          opt.value = u.id;
+          opt.textContent = `${u.full_name} (${u.employee_id})`;
+          select.appendChild(opt);
+        });
+      }
+    } catch (e) {
+      console.error("Failed to load users:", e);
+    }
+    
+    try {
+      const res = await fetch('/api/groups/list');
+      const data = await res.json();
+      if (data.success && data.groups) {
+        const select = document.getElementById('activateGroups');
+        data.groups.forEach(g => {
+          const opt = document.createElement('option');
+          opt.value = g.id;
+          opt.textContent = g.group_name;
+          select.appendChild(opt);
+        });
+      }
+    } catch (e) {
+      console.error("Failed to load groups:", e);
+    }
+    
+    // Set default dates
+    const today = new Date().toISOString().split('T')[0];
+    const nextYear = new Date();
+    nextYear.setFullYear(nextYear.getFullYear() + 1);
+    
+    document.getElementById('activateValidFrom').value = today;
+    document.getElementById('activateExpiresAt').value = nextYear.toISOString().split('T')[0];
+  });
+
+  let _generatedKey = '';
+  let _generatedMachine = '';
+
+  async function generateKey() {
+    const machineId = document.getElementById('genMachineId').value.trim();
+    const label     = document.getElementById('genLabel');
+    label.textContent = 'Generating…';
+
+    try {
+      const res  = await fetch('/api/licence/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ machine_id: machineId || 'GLOBAL' })
+      });
+      const data = await res.json();
+      if (data.success) {
+        _generatedKey     = data.product_key;
+        _generatedMachine = data.machine_id;
+        document.getElementById('genKeyDisplay').textContent = data.product_key;
+        document.getElementById('genResult').classList.remove('hidden');
+        showMsg('Key generated. Activate it below or copy it for later.', 'info');
+      } else {
+        showMsg(data.message || 'Generation failed.', 'danger');
+      }
+    } catch (e) {
+      showMsg('Network error.', 'danger');
+    } finally {
+      label.textContent = 'Generate product key';
+    }
+  }
+
+  function copyGenKey() {
+    if (!_generatedKey) return;
+    navigator.clipboard.writeText(_generatedKey).then(() => {
+      showMsg('Key copied to clipboard.', 'success');
+    });
+  }
+
+  async function activateGenerated() {
+    if (!_generatedKey) return;
+    await doActivate(_generatedKey, _generatedMachine);
+  }
+
+  async function activateKey() {
+    const key       = document.getElementById('activateKey').value.trim();
+    const machineId = document.getElementById('activateMachineId').value.trim();
+    if (!key) { showMsg('Please enter a product key.', 'warning'); return; }
+    await doActivate(key, machineId || 'GLOBAL');
+  }
+
+  async function doActivate(key, machineId) {
+    const label = document.getElementById('activateLabel');
+    label.textContent = 'Activating…';
+    
+    const validFrom = document.getElementById('activateValidFrom').value;
+    const expiresAt = document.getElementById('activateExpiresAt').value;
+    
+    const usersSelect = document.getElementById('activateUsers');
+    const selectedUsers = Array.from(usersSelect.selectedOptions).map(opt => parseInt(opt.value));
+    
+    const groupsSelect = document.getElementById('activateGroups');
+    const selectedGroups = Array.from(groupsSelect.selectedOptions).map(opt => parseInt(opt.value));
+    
+    const payload = { 
+      product_key: key, 
+      machine_id: machineId,
+      valid_from: validFrom ? new Date(validFrom).toISOString() : null,
+      expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
+      user_ids: selectedUsers,
+      group_ids: selectedGroups
+    };
+    
+    try {
+      const res  = await fetch('/api/licence/activate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        showMsg('Licence activated! Valid until ' + data.expires_at + '. Reloading…', 'success');
+        setTimeout(() => location.reload(), 1800);
+      } else {
+        showMsg(data.message || 'Activation failed.', 'danger');
+      }
+    } catch (e) {
+      showMsg('Network error.', 'danger');
+    } finally {
+      label.textContent = 'Activate licence';
+    }
+  }
+
+  async function revokeLicence() {
+    if (!confirm('Revoke the current licence? The system will show as unlicensed.')) return;
+    try {
+      const res  = await fetch('/api/licence/revoke', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        showMsg('Licence revoked. Reloading…', 'warning');
+        setTimeout(() => location.reload(), 1500);
+      }
+    } catch (e) {
+      showMsg('Network error.', 'danger');
+    }
+  }
+
+  function showMsg(msg, type) {
+    const box = document.getElementById('messageBox');
+    const map = {
+      danger:  'bg-red-500/20 border border-red-500/50 text-red-400',
+      success: 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-400',
+      warning: 'bg-yellow-500/20 border border-yellow-500/50 text-yellow-400',
+      info:    'bg-blue-500/20 border border-blue-500/50 text-blue-400',
+    };
+    box.className = 'mb-6 rounded-xl px-5 py-4 text-sm font-medium text-center ' + (map[type] || map.info);
+    box.textContent = msg;
+    box.classList.remove('hidden');
+    setTimeout(() => box.classList.add('hidden'), 5000);
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends "user_base.html" %}
+
+{% block content %}
+<div class="flex justify-center mt-10">
+    <div class="w-full max-w-lg">
+        <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+            <div class="bg-black/30 p-4 border-b border-white/10 text-center">
+                <h3 class="text-2xl font-semibold text-white"><i class="fas fa-sign-in-alt mr-2 text-emerald-400"></i>Face Login</h3>
+            </div>
+            <div class="p-6 md:p-8 text-center">
+                
+                {% if is_expired %}
+                <div class="flex items-center justify-center space-x-2 mb-6">
+                    <span class="relative flex h-3 w-3">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                    </span>
+                    <span class="text-sm font-medium text-gray-400">License <span class="text-red-400">Expired &middot; {{ expiry_date_str }}</span></span>
+                </div>
+                
+                <div class="relative flex flex-col items-center justify-center rounded-xl shadow-lg border border-red-500/20 bg-black/50 mb-6 w-full max-w-[320px] mx-auto text-center h-[240px]">
+                    <i class="fas fa-lock text-3xl text-red-500/50 mb-2"></i>
+                    <p class="text-red-500/70 text-sm font-medium">License expired<br><span class="text-xs text-gray-500">Camera disabled</span></p>
+                </div>
+                
+                <div class="border border-red-500/20 bg-red-500/5 p-4 rounded-xl mb-6 text-left relative overflow-hidden max-w-[320px] mx-auto">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-red-500/50"></div>
+                    <div class="flex items-start">
+                        <i class="fas fa-exclamation-triangle text-red-500 mt-0.5 mr-3 text-lg opacity-80"></i>
+                        <div>
+                            <h4 class="text-red-400 font-bold mb-1 text-sm">License expired</h4>
+                            <p class="text-gray-300 text-xs leading-relaxed">
+                                Your organization's license expired on {{ expiry_date_str }}. Login is disabled until the license is renewed. Please contact your system administrator.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col space-y-3 max-w-[320px] mx-auto">
+                    <button type="button" disabled class="bg-white/5 border border-white/10 text-gray-500 font-medium py-2.5 px-4 rounded-xl cursor-not-allowed">
+                        Login disabled
+                    </button>
+                    <a href="mailto:admin@example.com" class="bg-black border border-white/20 text-white hover:bg-white/10 font-medium py-2.5 px-4 rounded-xl transition-all text-center">
+                        Contact administrator
+                    </a>
+                </div>
+                {% else %}
+                <p class="text-gray-300 mb-6 font-medium">Please position your face in front of the camera.</p>
+                
+                <div class="relative inline-block overflow-hidden rounded-xl shadow-lg border-2 border-white/10 bg-black mb-6 w-full max-w-[320px] mx-auto text-center">
+                    <video id="webcam" autoplay playsinline width="320" height="240" class="object-cover w-full h-[240px]"></video>
+                    <canvas id="canvas" class="hidden"></canvas>
+                    
+                    <!-- Countdown Ring Overlay -->
+                    <div id="countdownOverlay" class="absolute inset-0 flex flex-col items-center justify-center bg-black/40 hidden">
+                        <div class="relative w-24 h-24 flex items-center justify-center">
+                            <svg class="absolute inset-0 w-full h-full -rotate-90">
+                                <circle class="text-white/20" stroke-width="6" stroke="currentColor" fill="transparent" r="42" cx="48" cy="48" />
+                                <circle id="countdownRing" class="text-emerald-400 transition-all duration-1000 ease-linear" stroke-width="6" stroke-dasharray="264" stroke-dashoffset="0" stroke-linecap="round" stroke="currentColor" fill="transparent" r="42" cx="48" cy="48" />
+                            </svg>
+                            <span id="countdownText" class="text-3xl font-bold text-white z-10">3</span>
+                        </div>
+                        <p class="text-white text-sm mt-3 font-medium">Scanning face...</p>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col space-y-4 max-w-[320px] mx-auto">
+                    <button type="button" id="startCamera" class="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold py-3 px-4 rounded-xl transition-all">
+                        <i class="fas fa-camera mr-2"></i> Turn On Camera
+                    </button>
+                    <!-- Login button is now hidden and triggered automatically -->
+                    <button type="button" id="loginBtn" class="hidden bg-gradient-to-r from-emerald-400 to-teal-600 hover:from-emerald-500 hover:to-teal-700 text-white font-bold py-3 px-4 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg" disabled>
+                        <i class="fas fa-fingerprint mr-2"></i> Login with Face
+                    </button>
+                </div>
+                
+                <div id="loginSpinner" class="hidden mt-4">
+                    <i class="fas fa-spinner fa-spin text-3xl text-emerald-400"></i>
+                </div>
+                
+                <div id="messageBox" class="mt-4 p-4 rounded-lg hidden font-medium text-center"></div>
+                {% endif %}
+                
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/webcam.js') }}"></script>
+{% if not is_expired %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        initLoginFlow();
+    });
+</script>
+{% endif %}
+{% endblock %}

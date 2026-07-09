@@ -1,0 +1,145 @@
+{% extends "admin_base.html" %}
+
+{% block content %}
+<div class="flex justify-center mt-10">
+    <div class="w-full max-w-5xl">
+        <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+            <div class="bg-black/30 p-6 border-b border-white/10 flex justify-between items-center">
+                <h3 class="text-2xl font-semibold text-white"><i class="fas fa-list-alt mr-2 text-cyan-400"></i>Access Logs</h3>
+                <button id="clearLogsBtn" class="bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/50 px-4 py-2 rounded-lg text-sm font-medium transition-all hidden">
+                    <i class="fas fa-trash-alt mr-1"></i> Clear Selected
+                </button>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-black/40 text-gray-300 text-sm uppercase tracking-wider">
+                            <th class="p-4 border-b border-white/10 w-10 text-center">
+                                <input type="checkbox" id="selectAllLogs" class="rounded border-gray-600 bg-gray-700 text-cyan-500 focus:ring-cyan-500/50 cursor-pointer w-4 h-4">
+                            </th>
+                            <th class="p-4 border-b border-white/10">Timestamp</th>
+                            <th class="p-4 border-b border-white/10">Employee ID</th>
+                            <th class="p-4 border-b border-white/10">Full Name</th>
+                            <th class="p-4 border-b border-white/10">IP Address</th>
+                            <th class="p-4 border-b border-white/10 text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/5">
+                        {% for log in logs %}
+                        <tr class="hover:bg-white/5 transition-colors">
+                            <td class="p-4 text-center">
+                                <input type="checkbox" class="log-checkbox rounded border-gray-600 bg-gray-700 text-cyan-500 focus:ring-cyan-500/50 cursor-pointer w-4 h-4" value="{{ log.id }}">
+                            </td>
+                            <td class="p-4 text-gray-300 whitespace-nowrap">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td class="p-4 font-medium text-white">
+                                {% if log.user %}
+                                    <span class="text-cyan-400">{{ log.user.employee_id }}</span>
+                                {% else %}
+                                    <span class="text-gray-500 italic">Unknown</span>
+                                {% endif %}
+                            </td>
+                            <td class="p-4 text-gray-300">
+                                {% if log.user %}
+                                    {{ log.user.full_name }}
+                                {% else %}
+                                    <span class="text-gray-500 italic">Unknown</span>
+                                {% endif %}
+                            </td>
+                            <td class="p-4 text-gray-400 text-sm">
+                                {% if log.ip_address %}
+                                    {{ log.ip_address }}
+                                {% else %}
+                                    <span class="text-gray-600 italic">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td class="p-4 text-center">
+                                {% if log.status == 'SUCCESS' %}
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                        <i class="fas fa-check-circle mr-1"></i> SUCCESS
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-500/20 text-red-400 border border-red-500/30">
+                                        <i class="fas fa-times-circle mr-1"></i> FAILED
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="p-8 text-center text-gray-400">
+                                <i class="fas fa-inbox text-4xl mb-3 opacity-50 block"></i>
+                                No access logs found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const selectAllLogs = document.getElementById('selectAllLogs');
+    const checkboxes = document.querySelectorAll('.log-checkbox');
+    const clearLogsBtn = document.getElementById('clearLogsBtn');
+
+    function updateBtnVisibility() {
+        const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+        if (anyChecked) {
+            clearLogsBtn.classList.remove('hidden');
+        } else {
+            clearLogsBtn.classList.add('hidden');
+        }
+        
+        if (checkboxes.length > 0) {
+            selectAllLogs.checked = Array.from(checkboxes).every(cb => cb.checked);
+        }
+    }
+
+    if (selectAllLogs) {
+        selectAllLogs.addEventListener('change', (e) => {
+            checkboxes.forEach(cb => cb.checked = e.target.checked);
+            updateBtnVisibility();
+        });
+    }
+
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', updateBtnVisibility);
+    });
+
+    if (clearLogsBtn) {
+        clearLogsBtn.addEventListener('click', async () => {
+            const selectedIds = Array.from(checkboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.value);
+
+            if (selectedIds.length === 0) return;
+
+            if (!confirm(`Are you sure you want to clear ${selectedIds.length} selected log(s)?`)) return;
+
+            try {
+                const response = await fetch('/api/logs/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ids: selectedIds })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    window.location.reload();
+                } else {
+                    alert(result.message || 'Failed to clear logs.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('An error occurred while clearing logs.');
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
