@@ -1,0 +1,52 @@
+# How to Run the Face Recognition Login System
+
+Since this project uses facial recognition libraries (`dlib` and `face_recognition`), it requires C++ Build Tools to compile successfully on Windows. 
+
+### Prerequisites
+
+1. **Install Microsoft C++ Build Tools**:
+   - Download from: https://visualstudio.microsoft.com/visual-cpp-build-tools/
+   - During installation, make sure to check the box for "Desktop development with C++".
+   - Restart your computer if prompted.
+
+2. **Ensure MySQL is running**:
+   - Create a database called `face_login_db` in MySQL using the provided `db_schema.sql` file.
+   - Update the `.env` file with your MySQL `DB_USER` and `DB_PASSWORD`.
+
+---
+
+### Step-by-Step Run Instructions
+
+Open a fresh PowerShell window and run these commands one by one:
+
+1. **Navigate to the project folder**:
+   cd D:\old_lap_data\l-1\D_Folder\Personal\projects\face-login-system
+
+2. **Create a Python virtual environment**:
+   python -m venv .venv
+
+3. **Activate the virtual environment**:
+   .\.venv\Scripts\activate
+
+4. **Install the required packages**:
+   pip install -r requirements.txt
+
+   *(Note: This step may take a few minutes as it compiles the C++ dependencies).*
+
+5. **Start the application**:
+   python app.py
+
+6. **Access the application**:
+   Open your web browser and go to: http://localhost:5000
+
+
+
+
+# 1. Activate the virtual environment
+.\venv\Scripts\activate
+
+# 2. Run the application
+python app.py
+
+
+python run_admin.py
