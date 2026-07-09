@@ -907,4 +907,21 @@ def api_delete_user(user_id):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    import subprocess
+    import sys
+    
+    print("=" * 50)
+    print("  STARTING BOTH ADMIN AND USER SERVERS")
+    print("=" * 50)
+    
+    # Start both servers in separate processes
+    admin_process = subprocess.Popen([sys.executable, 'run_admin.py'])
+    user_process = subprocess.Popen([sys.executable, 'run_user.py'])
+    
+    try:
+        admin_process.wait()
+        user_process.wait()
+    except KeyboardInterrupt:
+        print("\nShutting down both servers...")
+        admin_process.terminate()
+        user_process.terminate()
