@@ -35,18 +35,11 @@ Open a fresh PowerShell window and run these commands one by one:
 
 5. **Start the application**:
    python app.py
+   *(This will automatically start both the Admin server and User server simultaneously)*
 
 6. **Access the application**:
-   Open your web browser and go to: http://localhost:5000
+   - **Admin Panel**: Open your web browser and go to http://localhost:5000/admin_login
+   - **User Face Login**: Open your web browser and go to http://localhost:8000/login
 
-
-
-
-# 1. Activate the virtual environment
-.\venv\Scripts\activate
-
-# 2. Run the application
-python app.py
-
-
-python run_admin.py
+7.*Login crenditals for admin*
+Email: adminit@email.com Password: password@1122
